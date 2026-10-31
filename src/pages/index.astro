@@ -1,0 +1,113 @@
+---
+import Base from '../layouts/Base.astro';
+import { reviewsDoIdioma, slugDe } from '../lib/reviews';
+import { calcularSentenca, romano } from '../lib/notas';
+import { GENEROS } from '../data/metodo';
+import { link } from '../i18n/ui';
+
+const reviews = await reviewsDoIdioma('pt');
+const cards = reviews.map((r) => {
+  const { sententia, singularis } = calcularSentenca(r.data.genero, r.data.ajuste, r.data.censores);
+  return { r, sententia, singularis, href: link(`/reviews/${slugDe(r)}`) };
+});
+// Só mostra no filtro os gêneros que já têm review.
+const generos = [...new Set(reviews.map((r) => r.data.genero))];
+---
+<Base titulo="Censor Ludorum">
+  <section class="hero">
+    <p class="rotulo">Ludos iudicamus</p>
+    <h1>Censor Ludorum</h1>
+    <p class="sub">Dois irmãos, dois julgamentos, um método. Avaliamos jogos pelo que eles prometem ser.</p>
+  </section>
+
+  <section class="secao">
+    <div class="topo-lista">
+      <h2>Recensiones recentes</h2>
+      {generos.length > 1 && (
+        <div class="filtros" role="group" aria-label="Filtrar por gênero">
+          <button type="button" class="botao contorno" data-filtro="todos" aria-pressed="true">Todos</button>
+          {generos.map((g) => (
+            <button type="button" class="botao contorno" data-filtro={g} aria-pressed="false">{GENEROS[g].nome}</button>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {cards.length === 0 ? (
+      <p class="suave">Nenhuma avaliação publicada ainda.</p>
+    ) : (
+      <div class="grade">
+        {cards.map(({ r, sententia, singularis, href }) => (
+          <a class="card" href={href} data-genero={r.data.genero}>
+            {r.data.capa
+              ? <img src={link(r.data.capa)} alt="" loading="lazy" class="capa" />
+              : <div class="capa vazio">[CAPA]</div>}
+            <div class="corpo">
+              <div class="info">
+                <p class="rotulo">{GENEROS[r.data.genero].nome}{r.data.rascunho && ' · rascunho'}</p>
+                <p class="titulo">{r.data.titulo}</p>
+                <p class="veredito">{r.data.veredito}</p>
+                {singularis && <p class="selo">Sententia Singularis</p>}
+              </div>
+              <div class="nota" aria-label={`Nota ${sententia} de 100`}>
+                <span class="num">{sententia}</span>
+                <span class="rom">{romano(sententia)}</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+  </section>
+
+  <section class="secao metodo">
+    <h2>Methodus <em>— como pontuamos</em></h2>
+    <div class="passos">
+      <div><p class="numeral">I</p><p class="nome">Promissio</p><p>Declaramos o que o jogo promete. O gênero e a promessa definem o peso de cada critério.</p></div>
+      <div><p class="numeral">II</p><p class="nome">Iudicium</p><p>Cada censor dá de 0 a 100 por critério, escolhendo a faixa cuja descrição fixa melhor se encaixa.</p></div>
+      <div><p class="numeral">III</p><p class="nome">Sententia</p><p>A nota final é a média das notas ponderadas dos dois. Quando divergimos, mostramos e explicamos.</p></div>
+    </div>
+    <p><a href={link('/metodo')}>Ver o método completo →</a></p>
+  </section>
+</Base>
+
+<script>
+  const botoes = document.querySelectorAll<HTMLButtonElement>('[data-filtro]');
+  const cards = document.querySelectorAll<HTMLElement>('.card');
+  botoes.forEach((b) =>
+    b.addEventListener('click', () => {
+      const f = b.dataset.filtro;
+      botoes.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      cards.forEach((c) => { c.hidden = f !== 'todos' && c.dataset.genero !== f; });
+    }),
+  );
+</script>
+
+<style>
+  .hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 24px; }
+  .hero h1 { margin: 0; font-family: var(--romana); font-size: clamp(40px, 7vw, 64px); line-height: 1.1; letter-spacing: 0.06em; }
+  .hero .rotulo { letter-spacing: 0.3em; }
+  .sub { margin: 0; max-width: 640px; font-size: 22px; font-style: italic; color: var(--tinta-suave); }
+  .topo-lista { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--tinta); padding-bottom: 8px; }
+  .topo-lista h2 { margin: 0; font-family: var(--romana); font-size: 28px; letter-spacing: 0.08em; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 32px; }
+  .card { text-decoration: none; color: var(--tinta); border: 1px solid var(--tinta); background: var(--pergaminho); display: flex; flex-direction: column; }
+  .card[hidden] { display: none; }
+  .card:hover .titulo { color: var(--porfiro); }
+  .capa { height: 180px; width: 100%; object-fit: cover; }
+  .corpo { padding: 20px; display: flex; gap: 16px; justify-content: space-between; align-items: flex-start; }
+  .info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .info p { margin: 0; }
+  .titulo { font-family: var(--romana); font-weight: 700; font-size: 20px; }
+  .veredito { font-size: 16px; font-style: italic; color: var(--tinta-suave); }
+  .selo { font-family: var(--romana); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--porfiro); border: 1px solid var(--porfiro); padding: 2px 6px; align-self: flex-start; margin-top: 6px !important; }
+  .nota { text-align: center; border: 2px solid var(--porfiro); padding: 6px 10px; min-width: 64px; display: flex; flex-direction: column; }
+  .num { font-family: var(--romana); font-weight: 700; font-size: 28px; line-height: 1.1; color: var(--porfiro); }
+  .rom { font-family: var(--romana); font-size: 11px; letter-spacing: 0.1em; }
+  .metodo { border-top: 3px double var(--tinta); padding-top: 40px; }
+  .passos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; }
+  .passos p { margin: 0 0 8px; }
+  .numeral { font-family: var(--romana); font-weight: 700; font-size: 40px; color: var(--porfiro); line-height: 1; }
+  .nome { font-family: var(--romana); font-weight: 700; }
+</style>

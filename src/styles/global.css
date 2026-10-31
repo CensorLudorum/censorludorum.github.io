@@ -1,0 +1,72 @@
+:root {
+  --marmore: #F4EFE6;
+  --pergaminho: #FBF8F2;
+  --pedra: #EAE3D6;
+  --linha: #C9BFAE;
+  --tinta: #1F1B16;
+  --tinta-suave: #5C5248;
+  --porfiro: #7A1F1F;
+  --porfiro-escuro: #4E1212;
+  --areia: #D9CDB8;
+  --romana: 'Cinzel', 'Times New Roman', serif;
+  --texto: 'EB Garamond', Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--marmore);
+  color: var(--tinta);
+  font-family: var(--texto);
+  font-size: 19px;
+  line-height: 1.6;
+}
+
+a { color: var(--porfiro); }
+a:hover { color: var(--porfiro-escuro); }
+img { max-width: 100%; display: block; }
+
+.container { max-width: 1120px; margin: 0 auto; padding-inline: 24px; }
+
+.romana { font-family: var(--romana); letter-spacing: 0.1em; }
+.rotulo { font-family: var(--romana); font-size: 13px; letter-spacing: 0.2em; color: var(--porfiro); text-transform: uppercase; margin: 0; }
+.suave { color: var(--tinta-suave); }
+.pequeno { font-size: 15px; }
+
+/* Cabeçalho e rodapé */
+.cabecalho { border-bottom: 3px double var(--tinta); }
+.cabecalho .container { padding-block: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.marca { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--tinta); }
+.marca span { font-family: var(--romana); font-weight: 700; font-size: 22px; letter-spacing: 0.18em; }
+.nav { display: flex; flex-wrap: wrap; gap: 24px; font-family: var(--romana); font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; }
+.nav a { color: var(--tinta); text-decoration: none; padding-block: 10px; }
+.nav a:hover, .nav a[aria-current='page'] { color: var(--porfiro); }
+.rodape { background: var(--tinta); color: var(--marmore); margin-top: 80px; }
+.rodape .container { padding-block: 32px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 16px; }
+.rodape a { color: var(--marmore); }
+
+main.container { padding-top: 48px; display: flex; flex-direction: column; gap: 56px; }
+
+/* Títulos de seção numerados */
+.secao { display: flex; flex-direction: column; gap: 20px; }
+.secao > h2 { margin: 0; font-family: var(--romana); font-size: 28px; letter-spacing: 0.08em; }
+.secao > h2 em { font-family: var(--texto); font-weight: 400; font-size: 20px; color: var(--tinta-suave); letter-spacing: 0; }
+
+/* Placeholder listrado para imagens que faltam */
+.vazio {
+  border: 1px solid var(--linha);
+  background: repeating-linear-gradient(45deg, var(--pedra), var(--pedra) 12px, #E3DACB 12px, #E3DACB 24px);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--romana); font-size: 13px; letter-spacing: 0.12em; color: var(--tinta-suave);
+}
+
+/* Botões */
+.botao {
+  min-height: 44px; padding: 0 20px; border: 1px solid var(--tinta);
+  background: var(--tinta); color: var(--marmore);
+  font-family: var(--romana); font-size: 13px; letter-spacing: 0.12em; cursor: pointer;
+}
+.botao.contorno { background: transparent; color: var(--tinta); }
+.botao[aria-pressed='true'] { background: var(--tinta); color: var(--marmore); }
+.botao:focus-visible, a:focus-visible { outline: 2px solid var(--porfiro); outline-offset: 2px; }

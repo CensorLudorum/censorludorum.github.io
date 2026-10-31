@@ -1,0 +1,188 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { reviewsDoIdioma, slugDe, type Review } from '../../lib/reviews';
+import { calcularSentenca, romano, faixa } from '../../lib/notas';
+import { CENSORES, CRITERIOS, GENEROS, type CriterioId } from '../../data/metodo';
+import { link } from '../../i18n/ui';
+
+export async function getStaticPaths() {
+  const reviews = await reviewsDoIdioma('pt');
+  return reviews.map((review) => ({ params: { slug: slugDe(review) }, props: { review } }));
+}
+
+const { review } = Astro.props as { review: Review };
+const d = review.data;
+const { Content } = await render(review);
+const temSpoilers = Boolean(review.body?.trim());
+
+const s = calcularSentenca(d.genero, d.ajuste, d.censores);
+const criterios = Object.keys(CRITERIOS) as CriterioId[];
+const censores = s.presentes.map((id) => ({ id, info: CENSORES[id], dados: d.censores[id]! }));
+const assinatura = censores.map((c) => c.info.apelido).join(' e ');
+const dataFmt = d.data.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const paragrafos = (texto: string) => texto.trim().split(/\n\s*\n/);
+---
+<Base titulo={d.titulo} descricao={d.veredito}>
+  <section class="abertura">
+    <div class="titulos">
+      <p class="rotulo">Recensio · {GENEROS[d.genero].nome} · {d.plataformas}</p>
+      <h1>{d.titulo}</h1>
+      <p class="veredito">{d.veredito}</p>
+      <p class="pequeno suave">Publicado em {dataFmt} · por {assinatura}</p>
+    </div>
+    <div class="sententia">
+      <p class="rotulo suave">Sententia</p>
+      <p class="numero">{s.sententia}</p>
+      <p class="romana">{romano(s.sententia)} · de 100</p>
+      {s.singularis
+        ? <p class="selo">Sententia Singularis</p>
+        : <p class="pequeno suave">Média das notas dos dois censores</p>}
+    </div>
+  </section>
+
+  {d.capa
+    ? <img class="capa" src={link(d.capa)} alt={`Capa de ${d.titulo}`} />
+    : <div class="capa vazio">[IMAGEM DE CAPA]</div>}
+
+  <section class="secao">
+    <h2>I. Promissio <em>— a promessa do jogo</em></h2>
+    <p class="estreito">Antes de julgar, declaramos o que o jogo se propõe a ser. Os pesos nascem dessa promessa: um jogo que promete história é cobrado mais por ela.</p>
+    <div class="faixa-promessa">
+      <p><strong>Promessa declarada:</strong> <em>{d.promessa}</em></p>
+      <div class="barra" role="img" aria-label={`Pesos: Gameplay ${s.pesos.gameplay}%, História ${s.pesos.historia}%`}>
+        <div class="g" style={`width:${s.pesos.gameplay}%`}>Gameplay {s.pesos.gameplay}%</div>
+        <div class="h" style={`width:${s.pesos.historia}%`}>História {s.pesos.historia}%</div>
+      </div>
+      <p class="pequeno suave">
+        Base do gênero {GENEROS[d.genero].nome}: {GENEROS[d.genero].pesos.gameplay}/{GENEROS[d.genero].pesos.historia}
+        {d.ajuste !== 0 && <> · ajuste da promessa: {d.ajuste > 0 ? '+' : ''}{d.ajuste} no Gameplay</>}.
+        <a href={link('/metodo')}>Como funciona</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2>II. Iudicium <em>— as notas de cada censor</em></h2>
+    <div class="tabela-rolagem">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Critério</th>
+            <th scope="col">Peso</th>
+            {censores.map((c) => <th scope="col">{c.info.apelido}</th>)}
+            {!s.singularis && <th scope="col">Divergência</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {criterios.map((cr) => (
+            <tr>
+              <th scope="row">{CRITERIOS[cr]}</th>
+              <td>{s.pesos[cr]}%</td>
+              {censores.map((c) => (
+                <td><span class="n">{c.dados.notas[cr]}</span><span class="faixa">{faixa(c.dados.notas[cr]).nome}</span></td>
+              ))}
+              {!s.singularis && <td class="div">{s.divergencia[cr]} pts</td>}
+            </tr>
+          ))}
+          <tr class="total">
+            <th scope="row">Nota ponderada</th>
+            <td>100%</td>
+            {censores.map((c) => <td><span class="n destaque">{s.ponderadas[c.id]}</span></td>)}
+            {!s.singularis && <td>—</td>}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2>III. Tabula <em>— ficha de cada partida</em></h2>
+    <div class="fichas">
+      {censores.map((c) => (
+        <div class="ficha">
+          <p class="romana nome-censor">{c.info.apelido}</p>
+          <p>Horas jogadas: <strong>{c.dados.horas} h</strong></p>
+          <p>Plataforma: <strong>{c.dados.plataforma}</strong></p>
+          <p>Zerou? <strong>{c.dados.zerou}</strong></p>
+          <p>Dificuldade: <strong>{c.dados.dificuldade}</strong></p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2>IV. Experientia <em>— como foi jogar</em></h2>
+    <div class="textos">
+      {censores.map((c) => (
+        <article>
+          <h3>Por {c.info.apelido}</h3>
+          {paragrafos(c.dados.texto).map((p) => <p>{p}</p>)}
+        </article>
+      ))}
+    </div>
+
+    {temSpoilers && (
+      <details class="spoilers">
+        <summary><span class="romana">Cave · contém spoilers</span><span class="botao">Revelar</span></summary>
+        <div class="conteudo"><Content /></div>
+      </details>
+    )}
+
+    {d.prints.length > 0 && (
+      <div class="prints">
+        {d.prints.map((p, i) => <img src={link(p)} alt={`Captura de tela ${i + 1} de ${d.titulo}`} loading="lazy" />)}
+      </div>
+    )}
+  </section>
+</Base>
+
+<style>
+  .abertura { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-end; }
+  .titulos { flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .titulos p { margin: 0; }
+  h1 { margin: 0; font-family: var(--romana); font-weight: 700; font-size: clamp(36px, 6vw, 56px); line-height: 1.1; }
+  .veredito { font-style: italic; font-size: 22px; color: var(--tinta-suave); }
+  .sententia { flex: 1 1 260px; border: 2px solid var(--tinta); padding: 24px; text-align: center; background: var(--pergaminho); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .sententia p { margin: 0; }
+  .numero { font-family: var(--romana); font-weight: 700; font-size: 88px; line-height: 1; color: var(--porfiro); }
+  .sententia .romana { font-size: 18px; letter-spacing: 0.2em; }
+  .selo { font-family: var(--romana); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--porfiro); border: 1px solid var(--porfiro); padding: 4px 10px; margin-top: 8px !important; }
+  .capa { width: 100%; height: 320px; object-fit: cover; }
+  .estreito { margin: 0; max-width: 760px; }
+  .faixa-promessa { border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); padding: 20px 0; display: flex; flex-direction: column; gap: 12px; }
+  .faixa-promessa p { margin: 0; }
+  .barra { display: flex; height: 40px; border: 1px solid var(--tinta); }
+  .barra div { display: flex; align-items: center; padding: 0 12px; font-family: var(--romana); font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+  .barra .g { background: var(--porfiro); color: var(--pergaminho); }
+  .barra .h { background: var(--areia); color: var(--tinta); }
+  .tabela-rolagem { overflow-x: auto; border: 1px solid var(--tinta); }
+  table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 17px; }
+  thead tr { background: var(--tinta); color: var(--marmore); }
+  thead th { padding: 12px 16px; text-align: left; font-family: var(--romana); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; }
+  tbody tr { border-bottom: 1px solid var(--linha); }
+  tbody th { padding: 16px; text-align: left; font-family: var(--romana); font-size: 16px; }
+  td { padding: 16px; vertical-align: middle; }
+  .n { font-family: var(--romana); font-size: 24px; font-weight: 700; }
+  .n.destaque { color: var(--porfiro); }
+  .faixa { display: block; font-size: 14px; font-style: italic; color: var(--tinta-suave); }
+  .div { color: var(--porfiro); }
+  .total { background: var(--pergaminho); border-bottom: 0; }
+  .fichas { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  .ficha { border: 1px solid var(--linha); background: var(--pergaminho); padding: 20px; }
+  .ficha p { margin: 0 0 6px; }
+  .nome-censor { font-weight: 700; margin-bottom: 10px !important; }
+  .textos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; }
+  .textos h3 { margin: 0 0 12px; font-family: var(--romana); font-size: 20px; color: var(--porfiro); }
+  .textos p { margin: 0 0 12px; }
+  .spoilers { border: 2px dashed var(--porfiro); padding: 20px; }
+  .spoilers summary { list-style: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+  .spoilers summary::-webkit-details-marker { display: none; }
+  .spoilers summary .romana { font-weight: 700; color: var(--porfiro); text-transform: uppercase; }
+  .spoilers summary .botao { display: inline-flex; align-items: center; }
+  .spoilers[open] summary .botao { font-size: 0; }
+  .spoilers[open] summary .botao::after { content: 'Esconder'; font-size: 13px; }
+  .spoilers .conteudo { margin-top: 16px; }
+  .prints { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .prints img { aspect-ratio: 16 / 9; object-fit: cover; width: 100%; border: 1px solid var(--linha); }
+</style>

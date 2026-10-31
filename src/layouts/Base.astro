@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+import { t, link, type Lang } from '../i18n/ui';
+
+interface Props {
+  titulo: string;
+  descricao?: string;
+  lang?: Lang;
+}
+const { titulo, descricao = 'Avaliações de jogos com um método de pontuação declarado.', lang = 'pt' } = Astro.props;
+const atual = Astro.url.pathname.replace(/\/$/, '');
+const ativo = (href: string) => (atual === href.replace(/\/$/, '') ? 'page' : undefined);
+const tituloCompleto = titulo === 'Censor Ludorum' ? titulo : `${titulo} — Censor Ludorum`;
+---
+<!doctype html>
+<html lang={lang === 'pt' ? 'pt-BR' : 'en'}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{tituloCompleto}</title>
+  <meta name="description" content={descricao} />
+  <link rel="icon" type="image/svg+xml" href={link('/favicon.svg')} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container">
+      <a class="marca" href={link('/', lang)}>
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="#7A1F1F" stroke-width="1.6" aria-hidden="true"><path d="M18 32c-8-3-12-10-12-18"/><path d="M18 32c8-3 12-10 12-18"/><path d="M8 20c-3-1-4-3-4-6 3 0 5 2 6 4"/><path d="M7 13c-2-2-2-4-1-7 2 1 4 3 4 6"/><path d="M28 20c3-1 4-3 4-6-3 0-5 2-6 4"/><path d="M29 13c2-2 2-4 1-7-2 1-4 3-4 6"/></svg>
+        <span>CENSOR LUDORUM</span>
+      </a>
+      <nav class="nav" aria-label="Principal">
+        <a href={link('/', lang)} aria-current={ativo(link('/', lang))}>{t(lang, 'nav.reviews')}</a>
+        <a href={link('/metodo', lang)} aria-current={ativo(link('/metodo', lang))}>{t(lang, 'nav.metodo')}</a>
+        <a href={link('/sobre', lang)} aria-current={ativo(link('/sobre', lang))}>{t(lang, 'nav.sobre')}</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <slot />
+  </main>
+
+  <footer class="rodape">
+    <div class="container">
+      <span class="romana">CENSOR LUDORUM · {t(lang, 'lema').toUpperCase()}</span>
+      <span>{t(lang, 'rodape.contato')}: [e-mail do Censor Ludorum]</span>
+    </div>
+  </footer>
+</body>
+</html>

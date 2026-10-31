@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+import { GENEROS, CRITERIOS, FAIXAS, RUBRICA, AJUSTE_MAXIMO, REGRA_AJUSTE_FINO, type CriterioId } from '../data/metodo';
+
+const criterios = Object.keys(CRITERIOS) as CriterioId[];
+// Agrupa gêneros com os mesmos pesos numa linha só.
+const grupos = new Map<string, string[]>();
+for (const g of Object.values(GENEROS)) {
+  const chave = `${g.pesos.gameplay}/${g.pesos.historia}`;
+  grupos.set(chave, [...(grupos.get(chave) ?? []), g.nome]);
+}
+---
+<Base titulo="Método" descricao="Como o Censor Ludorum dá notas aos jogos.">
+  <section class="secao">
+    <p class="rotulo">Methodus</p>
+    <h1>Como pontuamos</h1>
+    <p class="estreito">Nenhuma nota de jogo é totalmente objetiva — jogar é uma experiência pessoal. O que fazemos é declarar as regras antes de julgar, para que qualquer leitor saiba de onde vem cada número.</p>
+  </section>
+
+  <section class="secao">
+    <h2>I. Promissio <em>— a promessa define os pesos</em></h2>
+    <p class="estreito">Cada gênero tem pesos base. Depois, a promessa do jogo — aquilo que ele se propõe a ser — pode mover até {AJUSTE_MAXIMO} pontos no Gameplay, e a História recebe o complemento.</p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Gênero</th><th scope="col">Gameplay</th><th scope="col">História</th></tr></thead>
+        <tbody>
+          {[...grupos].map(([chave, nomes]) => {
+            const [g, h] = chave.split('/');
+            return <tr><th scope="row">{nomes.join(', ')}</th><td>{g}%</td><td>{h}%</td></tr>;
+          })}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2>II. Iudicium <em>— a rubrica</em></h2>
+    <p class="estreito">Cada censor escolhe a faixa cuja descrição melhor se encaixa no jogo, sempre medindo contra a promessa. {REGRA_AJUSTE_FINO}</p>
+    {criterios.map((c) => (
+      <div class="rubrica">
+        <h3>{CRITERIOS[c]}</h3>
+        <dl>
+          {FAIXAS.map((f, i) => (
+            <div class="linha">
+              <dt><span class="romana">{f.nome}</span><span class="pequeno suave">{f.min}–{f.max}</span></dt>
+              <dd>{RUBRICA[c][i]}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    ))}
+  </section>
+
+  <section class="secao">
+    <h2>III. Sententia <em>— a nota final</em></h2>
+    <p class="estreito">A nota de cada censor é a média ponderada dos critérios. A <em>Sententia</em> é a média das notas dos dois censores. Mostramos sempre a divergência por critério: quando discordamos muito, explicamos por quê no texto.</p>
+    <p class="estreito">Normalmente só publicamos jogos que os dois jogaram. Quando abrimos exceção, a avaliação recebe o selo <strong class="romana">Sententia Singularis</strong>.</p>
+  </section>
+</Base>
+
+<style>
+  h1 { margin: 0; font-family: var(--romana); font-size: clamp(36px, 6vw, 52px); line-height: 1.1; }
+  .estreito { margin: 0; max-width: 760px; }
+  .tabela-rolagem { overflow-x: auto; border: 1px solid var(--tinta); max-width: 760px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--tinta); color: var(--marmore); }
+  thead th { padding: 12px 16px; text-align: left; font-family: var(--romana); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; }
+  tbody tr { border-bottom: 1px solid var(--linha); }
+  tbody th { padding: 12px 16px; text-align: left; font-weight: 400; }
+  td { padding: 12px 16px; font-family: var(--romana); font-weight: 700; }
+  .rubrica h3 { margin: 16px 0 8px; font-family: var(--romana); font-size: 20px; color: var(--porfiro); }
+  dl { margin: 0; border-top: 1px solid var(--linha); }
+  .linha { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 14px 0; border-bottom: 1px solid var(--linha); }
+  dt { flex: 0 0 160px; display: flex; flex-direction: column; }
+  dt .romana { font-weight: 700; }
+  dd { margin: 0; flex: 1 1 400px; min-width: 0; }
+</style>

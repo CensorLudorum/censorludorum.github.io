@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { CENSORES } from '../data/metodo';
+---
+<Base titulo="Sobre nós" descricao="Quem são os censores do Censor Ludorum.">
+  <section class="secao">
+    <p class="rotulo">De nobis</p>
+    <h1>Os censores</h1>
+    <p class="estreito">Na Roma antiga, o censor era o magistrado encarregado de avaliar e classificar. Aqui, avaliamos jogos — dois irmãos, cada um com seu jeito de jogar, seguindo o mesmo método.</p>
+  </section>
+
+  <section class="censores">
+    {Object.values(CENSORES).map((c) => (
+      <article class="censor">
+        <h2>{c.apelido}</h2>
+        <p class="suave pequeno">{c.nome}</p>
+        <p>{c.descricao}</p>
+      </article>
+    ))}
+  </section>
+</Base>
+
+<style>
+  h1 { margin: 0; font-family: var(--romana); font-size: clamp(36px, 6vw, 52px); line-height: 1.1; }
+  .estreito { margin: 0; max-width: 760px; }
+  .censores { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; }
+  .censor { border: 1px solid var(--tinta); background: var(--pergaminho); padding: 28px; }
+  .censor h2 { margin: 0; font-family: var(--romana); font-size: 24px; color: var(--porfiro); }
+  .censor p { margin: 4px 0 0; }
+</style>
